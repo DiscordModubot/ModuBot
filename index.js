@@ -14,10 +14,10 @@ Options:
 			-h, --help					Display this message
 			-v, --version				Display the program's version
 			-t, --token					Supply the token for the bot
-			-c, --config					Supply the location for the configuration file
-			-m, --modules			Supply the location directory for the modules
-			-u, --username			Supply the username to change to on startup
-			-s, --safemode			Run the application with no modules
+			-c, --config				Supply the location for the configuration file
+			-m, --modules				Supply the location directory for the modules
+			-u, --username				Supply the username to change to on startup
+			-s, --safemode				Run the application with no modules
 			-q, --quiet					Run the application with no display
 			-V, --verbose				Run the application as verbose
 			
