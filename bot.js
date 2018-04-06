@@ -1,39 +1,56 @@
-const CONFIG = require(CONFIG)
-const Date = new Date
+module.exports = () => {
+    let CONFIG = require(global.CONFIG);
 
-if (VERBOSE) {
-	console.verbose = console.log
-} else {
-	console.verbose = function() {}
-}
-if (QUIET) {
-	console.log = function() {}
-}
-if (!TOKEN) {
-	TOKEN = CONFIG.TOKEN
-}
-if (!USERNAME) {
-	USERNAME = CONFIG.USERNAME
-}
+    if (global.VERBOSE) {
+        console.verbose = console.log
+    } else {
+        console.verbose = function () {
+        }
+    }
+    if (global.QUIET) {
+        console.log = function () {
+        }
+    }
+    let TOKEN = global.TOKEN || CONFIG.TOKEN;
 
-let initTime = Date.getTime()
-console.log("--INITIALISATION--")
+    let USERNAME = global.USERNAME || CONFIG.USERNAME;
 
-console.verbose("Importing discord.js library")
-const discord = require("discord.js")
+    let initTime = Date.now();
+    console.log("--INITIALISATION--");
 
-console.verbose("Importing modules")
-let modules = {}
-fs.readdirSync(MODULES).forEach(file => {
-	console.verbose("Importing " + file)
-	modules[file] = eval(fs.readFileSync(file))
-})
+    console.verbose("Importing discord.js library");
+    const discord = require("discord.js");
 
-console.verbose("Creating discord client")
-const client = new discord.Client()
+    console.verbose("Creating discord client");
+    const client = new discord.Client();
 
-console.verbose("Logging into discord client")
-client.login(TOKEN)
-	.catch(console.error("Invalid Token"))
+    console.verbose("Importing modules");
+    let modules = {};
+    CONFIG.MODULES.split(" ,").forEach(file => {
+        console.verbose("Importing " + file);
+        modules[file] = require(`${global.MODULES}/${file}`);
+        if (modules[file].__init) modules[file].__init();
+        Object.keys(modules[file]).forEach((val, i) => {
+            if (!val.startsWith("__")) client.on(val, Object.values(modules[file])[i]);
+        })
+    });
 
-console.verbose(`Initialisation done, took ${Date.getTime() - inittime}ms`)
+    console.verbose("Logging into discord client");
+    client.login(TOKEN)
+        .catch((err) => console.error(err))
+        .then(() => {
+            if (USERNAME) {
+                console.verbose("Checking username");
+                if (client.user.username !== USERNAME) {
+                    console.verbose("Setting username");
+                    client.user.setUsername(USERNAME)
+                        .catch((err) => {console.error(err)})
+                }
+            }
+            console.verbose(`Initialisation done, took ${Date.now() - initTime}ms`);
+    });
+
+    client.on("ready", () => {
+        console.log(`> ${client.user.username} is up and running`)
+    })
+};
