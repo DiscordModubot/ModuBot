@@ -22,7 +22,7 @@ module.exports = () => {
     const discord = require("discord.js");
 
     console.verbose("Creating discord client");
-    const client = new discord.Client();
+    global.client = new discord.Client();
 
     console.verbose("Importing modules");
     global.modules = {};
