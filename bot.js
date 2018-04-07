@@ -1,8 +1,8 @@
 module.exports = () => {
-    let CONFIG = require(global.CONFIG);
+    global.CONFIG = require(global.CONFIG);
 
     if (global.VERBOSE) {
-        console.verbose = console.log
+        console.verbose = console.log;
     } else {
         console.verbose = function () {
         }
@@ -25,8 +25,8 @@ module.exports = () => {
     const client = new discord.Client();
 
     console.verbose("Importing modules");
-    let modules = {};
-    CONFIG.MODULES.split(" ,").forEach(file => {
+    global.modules = {};
+    CONFIG.MODULES.split(", ").forEach(file => {
         console.verbose("Importing " + file);
         modules[file] = require(`${global.MODULES}/${file}`);
         if (modules[file].__init) modules[file].__init();
@@ -52,5 +52,19 @@ module.exports = () => {
 
     client.on("ready", () => {
         console.log(`> ${client.user.username} is up and running`)
-    })
+    });
+
+    let cleanup = (code) => {
+        console.verbose(`Got exit code ${code}, cleaning up`);
+        Object.values(modules).forEach((m) => {
+             if (m.__cleanup) m.__cleanup(code);
+        });
+        console.verbose('Cleanup finished, exiting');
+        process.exit(code)
+    };
+    process.stdin.resume();
+    //process.on('exit', cleanup.bind(null));
+    process.on('SIGINT', cleanup.bind(null));
+    process.on('SIGUSR1', cleanup.bind(null));
+    process.on('SIGUSR2', cleanup.bind(null));
 };
