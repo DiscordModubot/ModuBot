@@ -38,7 +38,7 @@ node_modules/
 jspm_packages/
 
 # Webstorm directories
-.idea/
+.idea/*
 
 # Optional npm cache directory
 .npm
