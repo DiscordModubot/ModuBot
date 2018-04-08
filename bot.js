@@ -29,7 +29,6 @@ module.exports = () => {
     CONFIG.MODULES.split(", ").forEach(file => {
         console.verbose("Importing " + file);
         modules[file] = require(`${global.MODULES}/${file}`);
-        if (modules[file].__init) modules[file].__init();
         Object.keys(modules[file]).forEach((val, i) => {
             if (!val.startsWith("__")) client.on(val, Object.values(modules[file])[i]);
         })

@@ -13,9 +13,6 @@ module.exports = {
         hidden: false
     },
 
-    __init : () => {
-        console.verbose("This is run as soon as the bot has logged in")
-    },
     __cleanup : () => {
         console.log("This is run when the bot is about to exit")
     },
