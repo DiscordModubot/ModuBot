@@ -1,13 +1,17 @@
-const path      = require("path");
-const https     = require("https");
-const VERSION   = "0.0.1";
-TOKEN           = "";
-USERNAME        = "";
-CONFIG          = path.resolve(__dirname, "config.js");
-MODULES         = path.resolve(__dirname, "modules/");
-SAFEMODE        = false;
-QUIET           = false;
-VERBOSE         = false;
+const path          = require("path");
+const url           = require("url");
+const https         = require("https");
+const VERSION       = "0.0.1";
+const REPOSITORIES  = {
+    main : url.parse("https://raw.githubusercontent.com/DiscordModubot/ModuBot_Repository/master/")
+};
+TOKEN               = "";
+USERNAME            = "";
+CONFIG              = path.resolve(__dirname, "config.js");
+MODULES             = path.resolve(__dirname, "modules/");
+SAFEMODE            = false;
+QUIET               = false;
+VERBOSE             = false;
 
 const HELP      = `MultiBot ${VERSION}, a bot for https://discordapp.com.
 Usage: node index.js [OPTIONS]...
@@ -56,7 +60,7 @@ function list() {
 }
 
 function search(args) {
-    apicall("raw.githubusercontent.com", "/DiscordModubot/ModuBot_Repository/master/MASTER.data")
+    apicall(REPOSITORIES.main)
         .then((r) => {
             console.log(r)
         })
@@ -64,13 +68,13 @@ function search(args) {
 function install(args) {
     console.log("TODO")
 }
-function apicall(host = "api.github.com", path = "/repos/discordmodubot/modubot_repository/contents", useragent = "discordmodubot") {
+function apicall(repository) {
     return new Promise((resolve, reject) => {
         https.get({
-            host: host,
-            path: path,
+            host: repository.host,
+            path: repository.path,
             headers: {
-                'User-Agent': useragent
+                'User-Agent': "discordmodubot"
             }
         }, (res) => {
             res.setEncoding("utf8");
