@@ -24,11 +24,37 @@ module.exports = () => {
     console.verbose("Creating discord client");
     global.client = new discord.Client();
 
+    client.on("message", (msg) => {
+        if (msg.content.startsWith(global.CONFIG.PREFIX)) {
+            msg.arg = msg.content.split(" ").splice(1) || [];
+            msg.cmd = msg.content.replace(CONFIG.PREFIX, "").split(" ")[0].toLowerCase();
+            msg.channel.tempSend = (content, options = {}, time = 5000) => {
+                return new Promise((resolve, reject) => {
+                    msg.channel.send(content, options)
+                        .then(() => {
+                            msg.delete(time)
+                                .then(() => {
+                                    resolve(true)
+                                })
+                                .catch((err) => {
+                                    reject(err)
+                                })
+                        })
+                        .catch((err) => {
+                            reject(err)
+                        })
+                })
+            }
+        }
+    });
+
     console.verbose("Importing modules");
     global.modules = {};
+    global.module_data = {};
     CONFIG.MODULES.split(", ").forEach(file => {
         console.verbose("Importing " + file);
         modules[file] = require(`${global.MODULES}/${file}`);
+        module_data[file] = {};
         Object.keys(modules[file]).forEach((val, i) => {
             if (!val.startsWith("__")) client.on(val, Object.values(modules[file])[i]);
         })
