@@ -36,6 +36,7 @@ The format of scripts in ./data/automod is as follows:
 
 module.exports = {
     ready: () => {
+        if (!global.Text_diff) global.Text_diff = require("text-diff");
         global.module_data.automod = {
             api: {
                 check: (pure_data, comparisons, values) => {
@@ -43,6 +44,8 @@ module.exports = {
                     let regex = false;
                     let case_s = false;
                     let exe = false;
+                    let temp = undefined;
+                    let temp2 = undefined;
                     comparisons.forEach((comparison) => {
                         if (comparison === "regex") regex = true;
                         if (comparison === "case-sensitive") {case_s = true; data = pure_data;}
@@ -51,24 +54,35 @@ module.exports = {
                                 if (!case_s) value = value.toLowerCase();
                                 switch (comparison) {
                                     case "includes-word":
-                                        if (!regex) {if (data.split(/[a-z]+\s*/).indexOf(value) !== -1) exe = true}
-                                        if (data.search(`(${value})|([a-z]+\s*)`) !== -1) exe = true;
+                                        if (!regex && data.split(/[a-z]+\s*/).indexOf(value) !== -1) exe = true;
+                                        if (regex && data.search(`(${value})|([a-z]+\s*)`) !== -1) exe = true;
                                         break;
                                     case "includes":
-                                        if (!regex) {if (data.includes(value)) exe = true}
-                                        if (data.search(value) !== -1) exe = true;
+                                        if (!regex && data.includes(value)) exe = true;
+                                        if (regex && data.search(value) !== -1) exe = true;
                                         break;
                                     case "starts-with":
-                                        if (!regex) {if (data.startsWith(value)) exe = true}
-                                        if (data.search(`^${value}`) !== -1) exe = true;
+                                        if (!regex && data.startsWith(value)) exe = true;
+                                        if (regex && data.search(`^${value}`) !== -1) exe = true;
                                         break;
                                     case "ends-with":
-                                        if (!regex) {if (data.endsWith(value)) exe = true}
-                                        if (data.search(`${value}$`) !== -1) exe = true;
+                                        if (!regex && data.endsWith(value)) exe = true;
+                                        if (regex && data.search(`${value}$`) !== -1) exe = true;
                                         break;
                                     case "full-exact":
-                                        if (!regex) {if (data === value) exe = true}
-                                        if (data.replace(value, "") === "") exe = true;
+                                        if (!regex && data === value) exe = true;
+                                        if (regex && data.replace(value, "") === "") exe = true;
+                                        break;
+                                    case "larger":
+                                        temp = (isNaN(data)) ? data:parseFloat(data);
+                                        temp2 = (isNaN(value)) ? data:parseFloat(value);
+                                        console.log(temp, temp2);
+                                        if (temp > value) exe = true;
+                                        break;
+                                    case "smaller":
+                                        temp = (isNaN(data)) ? data:parseFloat(data);
+                                        temp2 = (isNaN(value)) ? data:parseFloat(value);
+                                        if (temp < value) exe = true;
                                         break;
                                 }
                             })
@@ -127,7 +141,77 @@ module.exports = {
                         if (script.log) module_data.automod.api.message.log(script, msg);
                     },
                     log: (script, msg) => {
-                        module_data.logger.api.log(`Script '${script.description}' activated on message; ${msg.id}`, msg.guild.id)
+                        let title   = `Action: ${script.actions.map((v => {return v[0].toUpperCase()+v.slice(1)})).join("; ")}`;
+                        let body    = `\n${msg.content}`;
+                        let footer  = `${msg.member.nickname || msg.author.username}#${msg.author.discriminator} • <@${msg.id}>\nScript: ${script.description}`;
+                        module_data.logger.api.log(`**__${title}__**\n\`\`\`${body}\`\`\`\n*${footer}*`, msg.guild.id)
+                    }
+                },
+                messageUpdate: {
+                    resp_placeholder: (values, oldmsg, newmsg) => {
+                        if (typeof values !== "object") values = [values];
+                        let diff = new Text_diff();
+                        let diffval = diff.main(oldmsg.content, newmsg.content);
+                        let charcng = 0;
+                        diffval.forEach((d) => {
+                            charcng += Math.abs(d[0]) * d[1].length
+                        });
+                        charcng /= oldmsg.content.length;
+                        return values.map((v) => {
+                            return v
+                                .replace("{{user-id}}",         newmsg.author.id)
+                                .replace("{{username}}",        newmsg.author.username)
+                                .replace("{{nickname}}",        newmsg.member.nickname)
+                                .replace("{{discriminator}}",   newmsg.author.username)
+                                .replace("{{type}}",            newmsg.type)
+                                .replace("{{new-body}}",        newmsg.content)
+                                .replace("{{new-id}}",          newmsg.id)
+                                .replace("{{old-body}}",        oldmsg.content)
+                                .replace("{{old-id}}",          oldmsg.id)
+                                .replace("{{guild-name}}",      newmsg.guild.name)
+                                .replace("{{guild-id}}",        newmsg.guild.id)
+                                .replace("{{guild-acronym}}",   newmsg.guild.nameAcronym)
+                                .replace("{{guild-owner-user}}",newmsg.guild.owner.user.username)
+                                .replace("{{guild-owner-nick}}",newmsg.guild.owner.nickname)
+                                .replace("{{guild-owner-id}}",  newmsg.guild.owner.id)
+                                .replace("{{percent-change}}",  charcng.toString())
+                        })
+                    },
+                    data_placeholder: (value, oldmsg, newmsg) => {
+                        return module_data.automod.api.messageUpdate.resp_placeholder(`{{${value}}}`, oldmsg, newmsg)[0]
+                    },
+                    execute: (script, oldmsg, newmsg) => {
+                        script.actions.forEach((v) => {
+                            switch (v) {
+                                case "delete":
+                                    newmsg.delete();
+                                    break;
+                                case "pin":
+                                    newmsg.pin();
+                                    break;
+                                case "react":
+                                    script.reactions.forEach((reaction) => [
+                                        newmsg.react(reaction)
+                                    ]);
+                                    break;
+                                case "log":
+                                    if (!script.log) module_data.automod.api.messageUpdate.log(script, oldmsg, newmsg);
+                                    break;
+                                case "reply":
+                                    newmsg.channel.send(module_data.automod.api.messageUpdate.resp_placeholder(script.response, oldmsg, newmsg));
+                                    break;
+                                case "dm_reply":
+                                    newmsg.author.dmChannel.send(module_data.automod.api.messageUpdate.resp_placeholder(script.response, oldmsg, msg));
+                                    break;
+                            }
+                        });
+                        if (script.log) module_data.automod.api.messageUpdate.log(script, oldmsg, newmsg);
+                    },
+                    log: (script, oldmsg, newmsg) => {
+                        let title   = `Action: ${script.actions.map((v => {return v[0].toUpperCase()+v.slice(1)})).join("; ")}`;
+                        let body    = `\n${oldmsg.content}\n--\n${newmsg.content}`;
+                        let footer  = `${newmsg.member.nickname || newmsg.author.username}#${newmsg.author.discriminator} • <@${newmsg.id}>\nScript: ${script.description}`;
+                        module_data.logger.api.log(`**__${title}__**\n\`\`\`${body}\`\`\`\n*${footer}*`, newmsg.guild.id)
                     }
                 }
             }
@@ -162,6 +246,32 @@ module.exports = {
                             //On success
                             console.verbose("Executing script actions");
                             global.module_data.automod.api.message.execute(v, msg)
+                        }
+                    })
+                }
+            })
+        }
+    },
+
+    messageUpdate: (oldmsg, newmsg) => {
+        if (newmsg.author.bot) return;
+        let scripts = module_data.automod.scripts[newmsg.guild.id];
+        if (scripts) {
+            console.verbose("Testing message on automod scripts");
+            //For each script that exists for the guild
+            scripts.forEach((v) => {
+                //Execute the script
+                console.verbose(`Testing message on "${v.description}"`);
+                //Check that the execute_on, type and chance fields are fulfilled.
+                if (v.execute_on === "messageUpdate" && v.type === oldmsg.type && v.chance > Math.random()) {
+                    //Check each execution
+                    v.executions.forEach((value) => {
+                        let data_set = global.module_data.automod.api.messageUpdate.data_placeholder(value.data_set, oldmsg, newmsg);
+                        //Check each comparison to each value
+                        if (global.module_data.automod.api.check(data_set, value.comparisons, value.values)) {
+                            //On success
+                            console.verbose("Executing script actions");
+                            global.module_data.automod.api.messageUpdate.execute(v, oldmsg, newmsg)
                         }
                     })
                 }
