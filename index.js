@@ -30,7 +30,7 @@ Options:
 			-q, --quiet                 Run the application with no display
 			-V, --verbose               Run the application as verbose
 			
-Toshimonster 2018`;
+Toshimonster 2020`;
 
 function formatBytes(bytes) {
     if (bytes === 0) return '0 B';

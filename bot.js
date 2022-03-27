@@ -1,7 +1,7 @@
-module.exports = () => {
+module.exports = async () => {
     global.CONFIG = require(global.CONFIG);
 
-    if (global.VERBOSE) {
+    if (global.VEOSE) {
         console.verbose = console.log;
     } else {
         console.verbose = function () {
@@ -11,9 +11,9 @@ module.exports = () => {
         console.log = function () {
         }
     }
-    let TOKEN = global.TOKEN || CONFIG.TOKEN;
+    let TOKEN = global.TOKEN || CONFIG.TOKEN || process.env.MB_TOKEN;
 
-    let USERNAME = global.USERNAME || CONFIG.USERNAME;
+    let USERNAME = global.USERNAME || CONFIG.USERNAME || process.env.MB_USERNAME;
 
     let initTime = Date.now();
     console.log("--INITIALISATION--");
@@ -32,7 +32,7 @@ module.exports = () => {
                 return new Promise((resolve, reject) => {
                     msg.channel.send(content, options)
                         .then(() => {
-                            msg.delete(time)
+                            msg.delete({time: time})
                                 .then(() => {
                                     resolve(true)
                                 })
@@ -82,10 +82,10 @@ module.exports = () => {
     let cleanup = (code) => {
         console.verbose(`Got exit code ${code}, cleaning up`);
         Object.values(modules).forEach((m) => {
-             if (m.__cleanup) m.__cleanup(code);
+             if (m.__cleanup) m.__cleanup(client, code);
         });
-        console.verbose('Cleanup finished, exiting');
-        process.exit(code)
+        console.verbose('Cleanup finished, exiting in 1 second.');
+        setTimeout(process.exit(code), 1000)
     };
     process.stdin.resume();
     //process.on('exit', cleanup.bind(null));

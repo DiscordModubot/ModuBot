@@ -13,7 +13,7 @@ module.exports = {
     },
 
     message: (msg) => {
-        if (!msg.content.toLowerCase().startsWith(`${global.CONFIG.PREFIX}help`)) return;
+        if (!msg.content.toLowerCase().startsWith(`${global["CONFIG"].PREFIX}help`)) return;
         let embed = {
             embed: {
                 title: "❓ Help ❓",
@@ -31,8 +31,10 @@ module.exports = {
         } else {
             //Arguments
             let modname = msg.content.split(" ").slice(1).join(" ").toLowerCase();
+            let found = false;
             Object.values(modules).forEach((m) => {
                 if (m.__help && m.__help.moduleName.toLowerCase() === modname) {
+                    found = true;
                     embed.embed.title += ` | ⚙ ${m.__help.moduleName} ⚙`;
                     if (!m.__help.commands) {
                         embed.embed.fields.push({
@@ -43,13 +45,14 @@ module.exports = {
                         m.__help.commands.forEach((c) => {
                             embed.embed.fields.push({
                                 name: c.name,
-                                value: `${c.description}\n\`${global.CONFIG.PREFIX + c.syntax}\``
+                                value: `${c.description}\n\`${global["CONFIG"].PREFIX + c.syntax}\``
                             })
                         })
                     }
                 }
             });
-            if (!embed.embed.fields) {
+
+            if (!found) {
                 embed.embed.fields.push({
                     name: "Not a real module!",
                     value: "🤔"
@@ -59,9 +62,12 @@ module.exports = {
         if (msg.channel.type !== 'dm') {
             msg.reply("\nSent you a DM with details!")
                 .then((m) => {
-                    m.delete(5000)
+                    m.delete({
+                        timeout: 5000
+                    })
                 })
         }
         msg.author.send(embed)
+            .catch(console.error)
     }
 };

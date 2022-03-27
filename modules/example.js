@@ -1,7 +1,7 @@
 module.exports = {
     __help : {
         //This is used by the popular help module
-        moduleName: "Example",
+        moduleName: "Example asd",
         description: "A basic module showing how modules work",
         commands: [
             {

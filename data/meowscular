@@ -1,0 +1,50 @@
+{
+    "quotes": {
+        "greeting": [
+            "Hey, Meowster!",
+            "Meowster!",
+            "Hey!",
+            "Hunter!",
+            "Meeeooowwwster.. Hey!",
+            "Oi, come me-over to get these gains!",
+            "Meow?",
+            "Rawr",
+            "Have you eaten yet?"
+        ],
+        "completed": [
+            "Purrrfect",
+            "Meowster, it is done",
+            "Get back to gains!",
+            "Why did the great jagi cross the road..... Because he was hammered! ... meow",
+            "Why do I do this? Beclaws thats what I do.",
+            "Now, that, was just purr-fection!",
+            "I was gonna share a pun.... Banahbrah",
+            "Wyvernfire can't melt steel beams",
+            "Why don't hunters drink coffee?\nBecause it's a cup of Jho.",
+            "Why should you never buy somthing from a Zinogre?\nThey always charge too much.",
+            "You know what game I played a lot as a kid?\nRollercoaster Wycoon",
+            "I love Brachydios quests; they're always a blast",
+            "Chameleos walks into a bar and dosen't.",
+            "Grab me a tail nyext time - it would pack some great gains!",
+            "Wow, I myight show this to Grammeowster Chef!"
+        ],
+        "failed": [
+            "That's no good, nya.",
+            "Pick yourself up and go get some Gains!",
+            "I'd better see Grammeowster Chef after this...",
+            "This is no gains, none at cl-all!",
+            "Meow! That's hot!",
+            "A bloody Jagras could do better than you",
+            "Dont you ever call me a cat again.",
+            "Feeling sick? dont worry, meow-ll get my nullberries"
+        ],
+        "signature": [
+            "meow",
+            "*meow*",
+            "rawr",
+            "*rawr*",
+            "purr",
+            "*purr*"
+        ]
+    }
+}
